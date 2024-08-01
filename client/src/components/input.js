@@ -11,13 +11,9 @@ const Input = ({
 	...props
 }) => {
 	return (
-		<div className={`row ${className}`}>
-			<div className="col-lg-6 offset-lg-3">
-				{label && (
-					<label className="block" htmlFor={name}>
-						{label}
-					</label>
-				)}
+		<div className={`${className}`}>
+			<div className="col-lg-6">
+				{label && <label htmlFor={name}>{label}</label>}
 				<input
 					type={type}
 					name={name}
@@ -29,7 +25,11 @@ const Input = ({
 					className={`form-input ${error ? "input-error" : ""}`}
 					{...props}
 				/>
-				{error && <span className="error-message">{error}</span>}
+				{error && (
+					<span className="error-message d-block mt-2 text-danger">
+						{error}
+					</span>
+				)}
 			</div>
 		</div>
 	)

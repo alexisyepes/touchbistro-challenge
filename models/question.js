@@ -15,6 +15,17 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 			allowNull: false,
 		},
+		lineOfBestFitPoints: {
+			type: DataTypes.JSONB, // This will store the slope (m) and intercept (b) as JSON
+			allowNull: false,
+			validate: {
+				isObject(value) {
+					if (typeof value !== "object" || Array.isArray(value)) {
+						throw new Error("lineOfBestFitPoints must be an object")
+					}
+				},
+			},
+		},
 	})
 
 	Question.associate = function (models) {

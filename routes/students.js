@@ -1,6 +1,10 @@
 const express = require("express")
 const router = express.Router()
 const db = require("../models")
+const {
+	INCORRECT_ANSWER_MSG,
+	CORRECT_ANSWER_MSG,
+} = require("../utils/constants")
 
 // POST /api/submit
 // Route to handle student submission
@@ -32,11 +36,9 @@ router.post("/submit", async (req, res) => {
 		})
 
 		if (isCorrect) {
-			return res.status(200).json({ message: "Correct!", submission })
+			return res.status(200).json({ message: CORRECT_ANSWER_MSG, submission })
 		} else {
-			return res
-				.status(200)
-				.json({ message: "Incorrect. Try again!", submission })
+			return res.status(200).json({ message: INCORRECT_ANSWER_MSG, submission })
 		}
 	} catch (error) {
 		console.error("Error handling submission:", error)
@@ -45,18 +47,5 @@ router.post("/submit", async (req, res) => {
 			.json({ error: "An error occurred while submitting your answer." })
 	}
 })
-
-// router.get("/all", async (req, res) => {
-// 	try {
-// 		res.send({
-// 			msg: "All students...",
-// 		})
-// 	} catch (error) {
-// 		console.error("Error handling all students:", error)
-// 		return res
-// 			.status(500)
-// 			.json({ error: "An error occurred while getting all students." })
-// 	}
-// })
 
 module.exports = router

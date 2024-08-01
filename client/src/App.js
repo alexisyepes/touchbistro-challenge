@@ -5,19 +5,48 @@ import axios from "axios"
 import Input from "./components/input"
 
 function App() {
-	const [data, setData] = useState([])
-	const [studentId, setStudentId] = useState(null)
+	const [numOfAttempts, setNumOfAttempts] = useState(0)
 	const [questionId, setQuestionId] = useState(null)
-	const [formData, setFormData] = useState({
-		name: "",
-		answer: "",
-	})
+	const [correctAnswer, setCorrectAnswer] = useState("")
+	const [answerMsg, setAnswerMsg] = useState("")
+	const [formData, setFormData] = useState({ name: "", answer: "" })
+	const [data, setData] = useState(null)
+	const [error, setError] = useState("")
+	const [countdown, setCountdown] = useState(null)
 
 	const svgRef = useRef()
 
 	useEffect(() => {
 		getQuestion()
+		// eslint-disable-next-line
 	}, [])
+
+	useEffect(() => {
+		if (numOfAttempts > 0 && numOfAttempts < 3) {
+			setAnswerMsg(`Incorrect. Try again!`)
+		} else if (numOfAttempts === 3) {
+			drawChart(data, true)
+			setNumOfAttempts(0)
+			setAnswerMsg(`Incorrect! The right answer was ${correctAnswer}`)
+			startCountdown()
+		}
+		// eslint-disable-next-line
+	}, [numOfAttempts, correctAnswer, data])
+
+	const startCountdown = () => {
+		let seconds = 10
+		setCountdown(seconds)
+		const interval = setInterval(() => {
+			seconds -= 1
+			setCountdown(seconds)
+			if (seconds <= 0) {
+				clearInterval(interval)
+				getQuestion()
+				setAnswerMsg("")
+				setFormData({ name: "", answer: "" })
+			}
+		}, 1000)
+	}
 
 	const handleChange = (e) => {
 		setFormData({
@@ -26,19 +55,61 @@ function App() {
 		})
 	}
 
-	const handleSubmit = (e) => {
+	const validateAnswerFormat = (answer) => {
+		const regex = /^y=-?\d+(\.\d+)?x[+-]\d+(\.\d+)?$/
+		return regex.test(answer.trim())
+	}
+
+	const handleSubmit = async (e) => {
 		e.preventDefault()
-		// Handle form submission
-		console.log("Form Data: ", formData)
+
+		if (!validateAnswerFormat(formData.answer)) {
+			setError(
+				"Invalid answer format. Please enter in the format y=mx+b (e.g., y=0.62x+2.75)"
+			)
+			return
+		} else {
+			setError("")
+			const obj = {
+				studentName: formData.name,
+				questionId,
+				answer: formData.answer,
+			}
+			const response = await axios.post("/api/students/submit", obj)
+
+			if (response.data.message === "Correct!") {
+				setAnswerMsg(`Correct! The answer is ${correctAnswer}`)
+				setNumOfAttempts(0)
+				startCountdown()
+			} else {
+				setNumOfAttempts((prevAttempts) => prevAttempts + 1)
+			}
+		}
 	}
 
 	const getQuestion = async () => {
-		const obj = {
-			studentId: 12,
-			questionId: 12,
-		}
-		const response = await axios.post("/api/questions/generate", obj)
+		try {
+			const obj = {
+				questionId: questionId || null,
+				studentId: formData.name, // Use a placeholder for student ID or replace with actual logic
+			}
+			const response = await axios.post("/api/questions/generate", obj)
 
+			if (response.data && response.data.question) {
+				const newQuestion = response.data.question
+				setData(newQuestion)
+				setQuestionId(newQuestion.id)
+				setCorrectAnswer(newQuestion.correctAnswer)
+				drawChart(newQuestion)
+			} else {
+				console.error("Failed to get a question.")
+			}
+		} catch (error) {
+			console.error("Error fetching question:", error)
+		}
+	}
+
+	const drawChart = (data, showLine = false) => {
 		const w = 400
 		const h = 300
 		const svg = d3
@@ -53,6 +124,7 @@ function App() {
 
 		const xAxis = d3.axisBottom(xScale).ticks(12)
 		const yAxis = d3.axisLeft(yScale)
+		svg.selectAll("*").remove()
 		svg.append("g").call(xAxis).attr("transform", `translate(0, ${h})`)
 		svg.append("g").call(yAxis)
 
@@ -66,12 +138,10 @@ function App() {
 			.attr("y", h / 2)
 			.attr("x", -40)
 			.text("y")
-		const points = response.data.question.coordinates.map((point) => [
-			point.x,
-			point.y,
-		])
+
+		const points = data.coordinates.map((point) => [point.x, point.y])
 		svg
-			.selectAll()
+			.selectAll("circle")
 			.data(points)
 			.enter()
 			.append("circle")
@@ -79,12 +149,43 @@ function App() {
 			.attr("cy", (d) => yScale(d[1]))
 			.attr("r", 2)
 
-		console.log("Res", response.data)
-		console.log("Points", points)
+		if (showLine) {
+			const { m, b } = data.lineOfBestFitPoints
+			const x1 = 0
+			const y1 = m * x1 + parseFloat(b)
+			const x2 = 12
+			const y2 = m * x2 + parseFloat(b)
+
+			svg
+				.append("line")
+				.attr("x1", xScale(x1))
+				.attr("y1", yScale(y1))
+				.attr("x2", xScale(x2))
+				.attr("y2", yScale(y2))
+				.attr("stroke", "blue")
+				.attr("stroke-width", 2)
+		}
 	}
+
 	return (
-		<div className="App">
-			<div className="my-5">
+		<div>
+			<div className="my-5 text-center pb-4">
+				<h3>
+					What's the line of best fit?{" "}
+					{numOfAttempts < 3 && `Number of tries: ${numOfAttempts}`} <br />
+				</h3>
+				{answerMsg && (
+					<h4
+						className={
+							formData.answer === correctAnswer ? "text-success" : "text-danger"
+						}
+					>
+						{answerMsg}
+					</h4>
+				)}
+				{countdown > 0 && (
+					<h4>Generating a new question in {countdown} seconds...</h4>
+				)}
 				<svg ref={svgRef}></svg>
 			</div>
 			<form className="border p-5" onSubmit={handleSubmit}>
@@ -105,11 +206,14 @@ function App() {
 						onChange={handleChange}
 						placeholder="Type your answer in this format: y=mx+b"
 						required
+						error={error}
 					/>
 				</div>
-				<button className="btn btn-primary mt-4 btn-block" type="submit">
-					Submit
-				</button>
+				<div className="text-center">
+					<button className="btn btn-primary mt-4" type="submit">
+						Submit Answer
+					</button>
+				</div>
 			</form>
 		</div>
 	)

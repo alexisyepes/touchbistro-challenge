@@ -7,19 +7,18 @@ const { createQuestion } = require("../utils/helpers")
 // Route to handle questions use or creation
 router.post("/generate", async (req, res) => {
 	try {
-		const { studentId, questionId } = req.body
+		const { questionId } = req.body
 		const availableQuestions = await db.Question.findAll()
-		console.log("avail question", availableQuestions)
 
 		let generatedQuestion = null
 
-		if (!availableQuestions.length) {
+		if (!availableQuestions.length && questionId === null) {
 			generatedQuestion = await createQuestion(5)
 			return res.status(200).json({ question: generatedQuestion })
 		}
 
 		let submission = await db.Submission.findOne({
-			where: { studentId, questionId },
+			where: { questionId },
 		})
 
 		if (submission) {
@@ -27,8 +26,7 @@ router.post("/generate", async (req, res) => {
 			generatedQuestion = await createQuestion(5)
 		} else {
 			// Use an existing question that has not been used by this student
-			const allQuestions = await db.Question.findAll()
-			generatedQuestion = allQuestions[0]
+			generatedQuestion = availableQuestions[0]
 		}
 
 		return res.status(200).json({ question: generatedQuestion })

@@ -56,6 +56,10 @@ const createQuestion = async (numOfCoordinates) => {
 	const question = {
 		coordinates,
 		correctAnswer,
+		lineOfBestFitPoints: {
+			m: m.toFixed(2),
+			b: b.toFixed(2),
+		},
 	}
 
 	const generatedQuestion = await db.Question.create(question)
