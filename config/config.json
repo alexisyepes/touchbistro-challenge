@@ -1,0 +1,24 @@
+{
+	"development": {
+		"username": "postgres",
+		"password": "123456",
+		"database": "touchbistro",
+		"host": "127.0.0.1",
+		"dialect": "postgres"
+	},
+	"test": {
+		"username": "postgres",
+		"password": "123456",
+		"database": "touchbistro",
+		"host": "127.0.0.1",
+		"dialect": "postgres"
+	},
+	"production": {
+		"username": "pending",
+		"password": "pending",
+		"database": "touchbistro",
+		"host": "pending_production_db_host",
+		"dialect": "postgres",
+		"use_env_variable": "DATABASE_URL"
+	}
+}
