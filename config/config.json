@@ -15,10 +15,6 @@
 		"logging": false
 	},
 	"production": {
-		"username": "pending",
-		"password": "pending",
-		"database": "touchbistro",
-		"host": "pending_production_db_host",
 		"dialect": "postgres",
 		"use_env_variable": "DATABASE_URL"
 	}
