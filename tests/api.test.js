@@ -1,6 +1,6 @@
 const request = require("supertest")
 const express = require("express")
-const router = require("../routes/questions") // Adjust this path as necessary
+const router = require("../routes/questions")
 const db = require("../models")
 const { createQuestion } = require("../utils/helpers")
 
