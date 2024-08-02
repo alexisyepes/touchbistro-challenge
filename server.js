@@ -41,3 +41,5 @@ db.sequelize.sync({ force: false }).then(() => {
 		console.log(`🌎 ==> API server now on port ${PORT}!`)
 	})
 })
+
+module.exports = app
