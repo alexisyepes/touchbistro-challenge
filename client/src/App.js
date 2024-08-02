@@ -7,12 +7,14 @@ import Input from "./components/input"
 function App() {
 	const [numOfAttempts, setNumOfAttempts] = useState(0)
 	const [questionId, setQuestionId] = useState(null)
+	const [studentId, setStudentId] = useState(null)
 	const [correctAnswer, setCorrectAnswer] = useState("")
 	const [answerMsg, setAnswerMsg] = useState("")
 	const [formData, setFormData] = useState({ name: "", answer: "" })
 	const [data, setData] = useState(null)
 	const [error, setError] = useState("")
 	const [countdown, setCountdown] = useState(null)
+	const [wasAnswerCorrect, setWasAnswerCorrect] = useState(false)
 
 	const svgRef = useRef()
 
@@ -23,8 +25,10 @@ function App() {
 
 	useEffect(() => {
 		if (numOfAttempts > 0 && numOfAttempts < 3) {
+			setWasAnswerCorrect(false)
 			setAnswerMsg(`Incorrect. Try again!`)
 		} else if (numOfAttempts === 3) {
+			setWasAnswerCorrect(false)
 			drawChart(data, true)
 			setNumOfAttempts(0)
 			setAnswerMsg(`Incorrect! The right answer was ${correctAnswer}`)
@@ -34,7 +38,7 @@ function App() {
 	}, [numOfAttempts, correctAnswer, data])
 
 	const startCountdown = () => {
-		let seconds = 10
+		let seconds = 12
 		setCountdown(seconds)
 		const interval = setInterval(() => {
 			seconds -= 1
@@ -43,7 +47,10 @@ function App() {
 				clearInterval(interval)
 				getQuestion()
 				setAnswerMsg("")
-				setFormData({ name: "", answer: "" })
+				setFormData((prevFormData) => ({
+					...prevFormData,
+					answer: "",
+				}))
 			}
 		}, 1000)
 	}
@@ -63,9 +70,13 @@ function App() {
 	const handleSubmit = async (e) => {
 		e.preventDefault()
 
+		if (!formData.answer) {
+			return
+		}
+
 		if (!validateAnswerFormat(formData.answer)) {
 			setError(
-				"Invalid answer format. Please enter in the format y=mx+b (e.g., y=0.62x+2.75)"
+				"Invalid answer format. Please enter in the format y=mx+b (e.g., y=0.62x+2.75) without any spaces."
 			)
 			return
 		} else {
@@ -76,9 +87,13 @@ function App() {
 				answer: formData.answer,
 			}
 			const response = await axios.post("/api/students/submit", obj)
+			setStudentId(response.data.submission.studentId)
+			setQuestionId(response.data.submission.questionId)
 
 			if (response.data.message === "Correct!") {
+				setWasAnswerCorrect(true)
 				setAnswerMsg(`Correct! The answer is ${correctAnswer}`)
+				drawChart(data, true)
 				setNumOfAttempts(0)
 				startCountdown()
 			} else {
@@ -91,7 +106,7 @@ function App() {
 		try {
 			const obj = {
 				questionId: questionId || null,
-				studentId: formData.name, // Use a placeholder for student ID or replace with actual logic
+				studentId: studentId || null,
 			}
 			const response = await axios.post("/api/questions/generate", obj)
 
@@ -117,7 +132,7 @@ function App() {
 			.attr("width", w)
 			.attr("height", h)
 			.style("overflow", "visible")
-			.style("margin-top", "100px")
+			.style("margin-top", "30px")
 
 		const xScale = d3.scaleLinear().domain([0, 12]).range([0, w])
 		const yScale = d3.scaleLinear().domain([0, 12]).range([h, 0])
@@ -172,19 +187,26 @@ function App() {
 			<div className="my-5 text-center pb-4">
 				<h3>
 					What's the line of best fit?{" "}
-					{numOfAttempts < 3 && `Number of tries: ${numOfAttempts}`} <br />
+					<span className="h5">
+						{numOfAttempts < 3 && `Number of tries: ${numOfAttempts}`}
+					</span>
 				</h3>
 				{answerMsg && (
-					<h4
-						className={
-							formData.answer === correctAnswer ? "text-success" : "text-danger"
-						}
-					>
+					<h4 className={wasAnswerCorrect ? "text-success" : "text-danger"}>
 						{answerMsg}
 					</h4>
 				)}
 				{countdown > 0 && (
 					<h4>Generating a new question in {countdown} seconds...</h4>
+				)}
+				{data && data.coordinates && (
+					<div className="d-flex justify-content-center">
+						{data.coordinates.map((point, index) => (
+							<div className="border p-1 mx-2" key={index}>
+								<strong>X:</strong> {point.x}, <strong>Y:</strong> {point.y}
+							</div>
+						))}
+					</div>
 				)}
 				<svg ref={svgRef}></svg>
 			</div>
@@ -200,21 +222,26 @@ function App() {
 					/>
 					<Input
 						type="text"
-						label="Answer"
+						label="Answer (rounded to 2 decimal places)"
 						name="answer"
 						value={formData.answer}
 						onChange={handleChange}
-						placeholder="Type your answer in this format: y=mx+b"
+						placeholder="Type your answer in this format: y=mx+b "
 						required
 						error={error}
 					/>
 				</div>
 				<div className="text-center">
-					<button className="btn btn-primary mt-4" type="submit">
+					<button
+						disabled={countdown}
+						className="btn btn-primary mt-4"
+						type="submit"
+					>
 						Submit Answer
 					</button>
 				</div>
 			</form>
+			<h6 className="text-center mt-4">By Alexis Yepes Sanabria 2024</h6>
 		</div>
 	)
 }

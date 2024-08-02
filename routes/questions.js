@@ -2,31 +2,40 @@ const express = require("express")
 const router = express.Router()
 const db = require("../models")
 const { createQuestion } = require("../utils/helpers")
+const { Op } = require("sequelize")
 
 // POST /api/submit
 // Route to handle questions use or creation
 router.post("/generate", async (req, res) => {
 	try {
-		const { questionId } = req.body
-		const availableQuestions = await db.Question.findAll()
+		const { studentId, questionId } = req.body
 
 		let generatedQuestion = null
 
-		if (!availableQuestions.length && questionId === null) {
+		if (!studentId) {
+			// If no studentId is provided, generate a new question (when app loads)
 			generatedQuestion = await createQuestion(5)
 			return res.status(200).json({ question: generatedQuestion })
 		}
 
-		let submission = await db.Submission.findOne({
-			where: { questionId },
+		const answeredQuestionIds = await db.Submission.findAll({
+			where: { studentId },
+			attributes: ["questionId"],
+			raw: true,
+		}).then((submissions) => submissions.map((sub) => sub.questionId))
+
+		const availableQuestion = await db.Question.findOne({
+			where: {
+				id: {
+					[Op.notIn]: answeredQuestionIds.length ? answeredQuestionIds : [-1],
+				},
+			},
 		})
 
-		if (submission) {
-			// If student already used this question... generate a new question
+		if (!availableQuestion) {
 			generatedQuestion = await createQuestion(5)
 		} else {
-			// Use an existing question that has not been used by this student
-			generatedQuestion = availableQuestions[0]
+			generatedQuestion = availableQuestion
 		}
 
 		return res.status(200).json({ question: generatedQuestion })
