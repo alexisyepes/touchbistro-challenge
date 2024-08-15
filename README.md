@@ -1,7 +1,5 @@
 # TouchBistro Full Stack - Developer Challenge
 
-## Live Url: https://touchbistro-ce37929f39ac.herokuapp.com/
-
 ## Questions from the [Google Doc](https://docs.google.com/document/d/1SGeYSqi6jwlMXxIwcbnST-xcoZQgXUWEeN2t5u9vJAk/edit):
 
 1. Do you have production experience with Node prior to the submission of this code? If yes, for how long? <br>
