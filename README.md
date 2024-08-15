@@ -37,7 +37,7 @@ A teacher wants to know how well their students understand the line of best fit 
 - Questions => Has many Submissions
 - Submissions => Belongs to Questions, Belongs to Students
 
-## Live postgres database configuration
+## Live postgres database configuration (!Outdated)
 
 - Host:
   c5hilnj7pn10vb.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
