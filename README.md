@@ -3,9 +3,9 @@
 ## Questions from the [Google Doc](https://docs.google.com/document/d/1SGeYSqi6jwlMXxIwcbnST-xcoZQgXUWEeN2t5u9vJAk/edit):
 
 1. Do you have production experience with Node prior to the submission of this code? If yes, for how long? <br>
-   - Yes, I have about 7 years of experience working with Node
+   - Yes, I have about 8 years of experience working with Node
 2. Do you have production experience with React prior to the submission of this code? If yes, for how long?
-   - Yes, I have about 7 years of experience working with React applications.
+   - Yes, I have about 8 years of experience working with React applications.
 3. Your full name (to ensure we can map back your submission to your resume)
    - ALEXIS YEPES SANABRIA
 
